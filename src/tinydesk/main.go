@@ -27,10 +27,8 @@ func main() {
 
 func grabConcertUrls(concert_channel chan string) {
 	for i := 0; true; i++ {
-		resp, _ := http.Get(fmt.Sprintf("%s%d", ARCHIVE_URL, 10*i))
-		defer resp.Body.Close()
-		body_bytes, _ := ioutil.ReadAll(resp.Body)
-		content := string(body_bytes)
+		html_bytes, _ := getUrlBody(fmt.Sprintf("%s%d", ARCHIVE_URL, 10*i))
+		content := string(html_bytes)
 
 		concerts := ConcertUrls(content)
 		if concerts.IsEmpty() {
@@ -44,8 +42,25 @@ func grabConcertUrls(concert_channel chan string) {
 	}
 }
 
+func getUrlBody(url string) ([]byte, error) {
+	resp, _ := http.Get(url)
+	defer resp.Body.Close()
+	body_bytes, err := ioutil.ReadAll(resp.Body)
+	return body_bytes, err
+}
+
 func ensure_concert_backed_up(url string) {
-	fmt.Println(url)
+	html_bytes, _ := getUrlBody(url)
+	content := string(html_bytes)
+
+	mp3_regex := regexp.MustCompile("http://[^?\\s]*[.]mp3")
+
+	download_url := mp3_regex.FindString(content)
+	if len(download_url) == 0 {
+		fmt.Println(url)
+	} else {
+		fmt.Println(download_url)
+	}
 }
 
 func ConcertUrls(html string) ConcertUrlGroup {
