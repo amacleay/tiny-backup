@@ -72,23 +72,22 @@ func ensure_concert_backed_up(url string, concurrencyLimiter chan bool) {
 
 	download_url := mp3_regex.FindString(content)
 	if len(download_url) == 0 {
-		fmt.Fprintf(os.Stderr, "BAD: %s\n", url)
+		// There was no concert to download here; skip
 	} else {
 		base_name := path.Base(download_url)
 
 		// Only download if the file doesn't exist already
-		if stat, err := os.Stat(base_name); os.IsNotExist(err) {
+		if _, err := os.Stat(base_name); os.IsNotExist(err) {
 			contents, err := getUrlBody(download_url)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to download %s: %v\n", download_url, err)
 			} else {
-				fmt.Printf("Download succeeded for %s\n", download_url)
 				newFile, err := os.Create(base_name)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Failed to create %s\n", base_name)
 				} else {
 					defer newFile.Close()
-					fmt.Printf("Writing to %s\n", base_name)
+					fmt.Printf("Writing %s\n", base_name)
 					_, err := newFile.Write(contents)
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "Write error: %s\n", base_name)
@@ -96,7 +95,7 @@ func ensure_concert_backed_up(url string, concurrencyLimiter chan bool) {
 				}
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "File %s wasn't IsNotExist error: %v %v\n", base_name, stat, err)
+			// File already exists, do nothing
 		}
 	}
 	<-concurrencyLimiter
