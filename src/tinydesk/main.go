@@ -102,7 +102,7 @@ func ensure_concert_backed_up(url string, concurrencyLimiter chan bool) {
 }
 
 func ConcertUrls(html string) ConcertUrlGroup {
-	a := ConcertUrlGroup(make([]string, 10)) // 10 urls per page max
+	a := ConcertUrlGroup(make([]string, 15)) // 10 urls per page max, plus buffer
 	concert_regex := regexp.MustCompile("http://www[.]npr[.]org/[^?\\s]*-concert")
 	urls := concert_regex.FindAllString(html, 100)
 
